@@ -21,6 +21,7 @@ func (cmd *Leave) Execute(
 	catOwnerID int,
 ) error {
 	catOwner, err := cmd.catOwnerRepository.Get(catOwnerID).
+		ForUpdate().
 		WithCats().
 		Load(ctx)
 	if err != nil {

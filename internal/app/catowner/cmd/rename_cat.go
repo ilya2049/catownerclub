@@ -24,6 +24,7 @@ func (cmd *RenameCat) Execute(
 ) error {
 	catOwner, err := cmd.catOwnerRepository.
 		Get(catOwnerID).
+		ForUpdate().
 		WithCat(catID).
 		Load(ctx)
 

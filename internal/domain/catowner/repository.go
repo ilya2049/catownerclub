@@ -11,6 +11,8 @@ type Repository interface {
 }
 
 type RepositoryQuery interface {
+	ForUpdate() RepositoryQuery
+
 	WithCats() RepositoryQuery
 	WithCat(catID int) RepositoryQuery
 	Load(context.Context) (*CatOwner, error)

@@ -23,6 +23,7 @@ func (cmd *GiveUpAllCats) Execute(
 ) error {
 	catOwner, err := cmd.catOwnerRepository.
 		Get(catOwnerID).
+		ForUpdate().
 		WithCats().
 		Load(ctx)
 	if err != nil {

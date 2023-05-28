@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"catownerclub/internal/domain/catowner"
+	"catownerclub/internal/outbound/pg"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -12,8 +13,9 @@ import (
 type repositoryQuery struct {
 	db *pgxpool.Pool
 
-	catOwnerID int
+	forUpdate bool
 
+	catOwnerID  int
 	getCatsFunc func(context.Context) (map[int]*catowner.Cat, error)
 }
 
@@ -27,6 +29,12 @@ func newRepositoryQuery(db *pgxpool.Pool, catOwnerID int) *repositoryQuery {
 	}
 }
 
+func (q *repositoryQuery) ForUpdate() catowner.RepositoryQuery {
+	q.forUpdate = true
+
+	return q
+}
+
 func (q *repositoryQuery) WithCats() catowner.RepositoryQuery {
 	sql := `
 		select
@@ -35,6 +43,10 @@ func (q *repositoryQuery) WithCats() catowner.RepositoryQuery {
 		from cats
 		where owner_id = $1
 	`
+
+	if q.forUpdate {
+		sql = pg.ForUpdate(sql)
+	}
 
 	cats := make(map[int]*catowner.Cat)
 
@@ -76,6 +88,10 @@ func (q *repositoryQuery) WithCat(catID int) catowner.RepositoryQuery {
 		where id = $1 and owner_id = $2
 	`
 
+	if q.forUpdate {
+		sql = pg.ForUpdate(sql)
+	}
+
 	q.getCatsFunc = func(ctx context.Context) (map[int]*catowner.Cat, error) {
 		row := q.db.QueryRow(ctx, sql, catID, q.catOwnerID)
 
@@ -104,6 +120,10 @@ func (q *repositoryQuery) Load(ctx context.Context) (*catowner.CatOwner, error) 
 		from cat_owners
 		where id = $1
 	`
+
+	if q.forUpdate {
+		sql = pg.ForUpdate(sql)
+	}
 
 	row := q.db.QueryRow(ctx, sql, q.catOwnerID)
 
